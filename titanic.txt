@@ -1,0 +1,325 @@
+      Titanic project: Survival Prediction using R
+         Data Exploration
+1.View(train)
+2.sum(is.na(train))
+3.colSums(is.na(train))
+4.str(train)
+5.library(RColorBrewer)   
+barplot(prop.table(table(train$Survived,train$Sex)), col = brewer.pal(3,"Set1"))
+ 
+6. library(ggplot2)   
+qplot(factor(Pclass), data=train, geom = "bar", fill=factor(Survived))
+ 
+
+7.mosaicplot(table(train$Pclass,train$Sex,train$Survived), sort = c(3,1,2), color = T)
+ 
+8.library(gridExtra)
+library(Hmisc)
+cutSurviving <- cut2
+ cutSurviving <- cut2(train$Survived,g=2)
+ qplot(cutSurviving,Age, data=train,fill=cutSurviving, geom = c("boxplot"))
+ 
+ 
+
+9.qplot(factor(Pclass),Age, data = train,geom = "boxplot")
+ 
+
+10.qplot(cutSurviving,Fare, data = train,fill=cutSurviving)
+ 
+
+11. qplot(Fare, Age, data = train, colour=factor(Pclass), na.rm = TRUE)
+ 
+
+
+
+12.qplot(Pclass,Age,colour=Survived,data = train, na.rm=TRUE)+geom_smooth(method = 'lm', formula = y~x)
+ 
+
+Data Mining
+
+
+1.library(data.table)
+ 2.dt1<- as.data.table(train)
+ 3.View(train)
+ 4.dt1$Ticket[grep('^1|^57|^69|^P', dt1$Ticket)] <- 1
+6.dt1$Ticket[grep('^2|^SW|^SO|^SC|^S.W|^S.P|^S.O|^S.C|^F', dt1$Ticket)] <- 2
+7.dt1$Ticket[grep('^3|^C|^26|^4|^54|^65|^7|^8|^9|^A|LINE|SOTON|STON|^W|^160|^14', dt1$Ticket)] <- 3
+8. dt1$Name[grep('Master.', dt1$Name, fixed=TRUE)] = 'Master'
+9.dt1$Name[grep('Mr.', dt1$Name, fixed=TRUE)] = 'Mr'
+10. dt1$Name[grep('Miss.|Mlle', dt1$Name)] = 'Miss'
+11. dt1$Name[grep('Mrs.|Mme.|Ms.|Lady.|Countess.', dt1$Name)] = 'Mrs'
+12. dt1$Name[grep("Dr.|Col.|Rev.|Capt.|Major.|Sir.|Don.|Jonkheer", dt1$Name)] = 'Sir'
+13. dt_0<-dt1[, mean(Age, na.rm = TRUE), by = Name]
+ 
+14.dt0 <- dt1[is.na(Age),.(Age, Name)]
+View(dt0)
+ 
+15.dt <- merge(dt0, dt_0, by = 'Name')
+ View(dt)
+ 
+16.dt <- dt[, Age := round(V1, 2)]
+View(dt)
+ 
+17.dt <- dt[, V1 := NULL]
+View(dt)
+ 
+18. unique(dt)
+
+     Name   Age
+1: Master  4.57
+2:   Miss 21.80
+3:     Mr 32.37
+4:    Mrs 35.80
+5:    Sir 46.05
+
+19. library(ggplot2) 
+  
+
+20.qplot(Age,colour=Name,data=dt1,geom="density")
+
+ 
+ 
+21. table(dt1$Pclass, dt1$Name)
+   
+    Master Miss  Mr Mrs Sir
+  1      3   48 107  45  13
+  2      9   34  91  42   8
+  3     28  102 319  42   0
+
+22.  table(dt1$Pclass, dt1$Name,dt1$Survived)
+, ,  = 0
+
+   
+    Master Miss  Mr Mrs Sir
+  1      0    2  70   1   7
+  2      0    2  83   4   8
+  3     17   51 283  21   0
+
+, ,  = 1
+
+   
+    Master Miss  Mr Mrs Sir
+  1      3   46  37  44   6
+  2      9   32   8  38   0
+  3     11   51  36  21   0
+
+23.  findCorrelation(cor(train[,-c(1, 4, 5, 9, 11, 12)]), cutoff = .7, names = T)
+character(0)
+24. table(train$Sex)
+
+female   male 
+   314    577 
+
+25.  nzv <- nearZeroVar(dt1, saveMetrics=TRUE)
+      View(nzv) 
+ 
+26.  if (any(nzv$nzv)) nzv else message("No variables with near zero variance")
+No variables with near zero variance
+
+
+1.test <- read.csv("C:/Users/bajpai/Downloads/test.csv")
+ 2. View(test)
+# fill in missing values for Age
+3. test$Age[is.na(test$Age)] = mean(test$Age, na.rm = TRUE)  
+4.nonvars = c("PassengerId","Name","Ticket","Embarked","Cabin")
+5. train = train[,!(names(train) %in% nonvars)]
+6. str(train)
+output:
+'data.frame':	891 obs. of  7 variables:
+ $ Survived: int  0 1 1 1 0 0 0 0 1 1 ...
+ $ Pclass  : int  3 1 3 1 3 3 1 3 3 2 ...
+ $ Sex     : Factor w/ 2 levels "female","male": 2 1 1 1 2 2 2 2 1 1 ...
+ $ Age     : num  22 38 26 35 35 ...
+ $ SibSp   : int  1 1 0 1 0 0 0 3 0 1 ...
+ $ Parch   : int  0 0 0 0 0 0 0 1 2 0 ...
+ $ Fare    : num  7.25 71.28 7.92 53.1 8.05 ...
+7. train$Sex = as.numeric(train$Sex)
+8. test$Sex = as.numeric(test$Sex)
+9.test$Sex = as.numeric(test$Sex)
+10.cor(train)
+output:
+            Survived      Pclass         Sex         Age       SibSp       Parch        Fare
+Survived  1.00000000 -0.33848104 -0.54335138 -0.06980852 -0.03532250  0.08162941  0.25730652
+Pclass   -0.33848104  1.00000000  0.13190049 -0.33133877  0.08308136  0.01844267 -0.54949962
+Sex      -0.54335138  0.13190049  1.00000000  0.08415344 -0.11463081 -0.24548896 -0.18233283
+Age      -0.06980852 -0.33133877  0.08415344  1.00000000 -0.23262459 -0.17919092  0.09156609
+SibSp    -0.03532250  0.08308136 -0.11463081 -0.23262459  1.00000000  0.41483770  0.15965104
+Parch     0.08162941  0.01844267 -0.24548896 -0.17919092  0.41483770  1.00000000  0.21622494
+Fare      0.25730652 -0.54949962 -0.18233283  0.09156609  0.15965104  0.21622494  1.00000000
+#Build a Logistic Regression Model
+11. TitanicLog1 = glm(Survived~., data = train, family = binomial)
+12.summary(TitanicLog1)
+output:
+Call:
+glm(formula = Survived ~ ., family = binomial, data = train)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-2.7129  -0.6032  -0.4273   0.6191   2.4186  
+
+Coefficients:
+             Estimate Std. Error z value Pr(>|z|)    
+(Intercept)  7.723375   0.645814  11.959  < 2e-16 ***
+Pclass      -1.084297   0.139119  -7.794 6.49e-15 ***
+Sex         -2.762930   0.199011 -13.883  < 2e-16 ***
+Age         -0.039702   0.007797  -5.092 3.55e-07 ***
+SibSp       -0.350725   0.109552  -3.201  0.00137 ** 
+Parch       -0.111963   0.117400  -0.954  0.34024    
+Fare         0.002852   0.002361   1.208  0.22718    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 1186.66  on 890  degrees of freedom
+Residual deviance:  788.73  on 884  degrees of freedom
+AIC: 802.73
+
+Number of Fisher Scoring iterations: 5
+
+13. TitanicLog2 = glm(Survived ~ . - Parch, data = train, family = binomial)
+14.summary(TitanicLog2)
+
+Call:
+glm(formula = Survived ~ . - Parch, family = binomial, data = train)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-2.7458  -0.5948  -0.4170   0.6109   2.4501  
+
+Coefficients:
+             Estimate Std. Error z value Pr(>|z|)    
+(Intercept)  7.668775   0.641018  11.963  < 2e-16 ***
+Pclass      -1.098189   0.137969  -7.960 1.72e-15 ***
+Sex         -2.726408   0.194561 -14.013  < 2e-16 ***
+Age         -0.039385   0.007773  -5.067 4.05e-07 ***
+SibSp       -0.378646   0.106212  -3.565 0.000364 ***
+Fare         0.002373   0.002250   1.054 0.291707    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 1186.66  on 890  degrees of freedom
+Residual deviance:  789.65  on 885  degrees of freedom
+AIC: 801.65
+
+Number of Fisher Scoring iterations: 5
+
+15. TitanicLog3 = glm(Survived ~ . - Parch - Fare, data = train, family = binomial)
+16. summary(TitanicLog3)
+
+Call:
+glm(formula = Survived ~ . - Parch - Fare, family = binomial, 
+    data = train)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-2.6869  -0.6055  -0.4169   0.6111   2.4547  
+
+Coefficients:
+             Estimate Std. Error z value Pr(>|z|)    
+(Intercept)  7.931782   0.594109  13.351  < 2e-16 ***
+Pclass      -1.172391   0.119725  -9.792  < 2e-16 ***
+Sex         -2.739806   0.194142 -14.112  < 2e-16 ***
+Age         -0.039793   0.007755  -5.131 2.88e-07 ***
+SibSp       -0.357788   0.104033  -3.439 0.000583 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 1186.66  on 890  degrees of freedom
+Residual deviance:  790.84  on 886  degrees of freedom
+AIC: 800.84
+
+Number of Fisher Scoring iterations: 5
+
+17.baseAcur = 549 / (549 + 342)
+18.predictTrain = predict(TitanicLog3, type = "response")
+19. table(Train$Survived, predictTrain >= 0.5)
+   output:
+    FALSE TRUE
+  0   458   91
+  1    98  244
+20.accuracy = (244 + 458) / nrow(train)
+21.sensitivity = 244 / (244 + 98)
+22.specificity = 458 / (458 + 91)
+23. cat("accuracy: ", accuracy, " > ", "baseline: ", baseAcur)
+output:
+accuracy:  0.7878788  >  baseline:  0.6161616
+   
+Random Forest
+1.library(rpart)
+2.ibrary(rattle)
+3.library(rpart.plot)
+4.fit <- rpart(Survived ~ Pclass + Sex + Age + SibSp + Parch + Ticket+Name+New_group, data=dt1, method="class")
+
+5.fancyRpartPlot(fit)
+ 
+for (i in 1:nrow(dt1)){
+  if(dt1$Pclass[i] == 1){
+    dt1$Pclass[i] = 'FirstClass'
+  } else if(dt1$Pclass[i] == 2){
+    dt1$Pclass[i] = 'SecondClass'
+    }else{
+      dt1$Pclass[i] = 'ThirdClass' 
+    
+  }
+}
+
+
+
+for (i in 1:nrow(dt1)){
+  if(dt1$Survived[i] == 1){
+    dt1$Survived[i] = 'Alive'
+  }else{
+    dt1$Survived[i] = 'Dead' 
+    
+  }
+}
+6.dt1$Survived <- as.factor(dt1$Survived)
+7.dt1$Name <- as.factor(dt1$Name)
+8.dt1$Sex <- as.factor(dt1$Sex)
+9.dt1$Pclass <- as.factor(dt1$Pclass)
+10.dt1$New_group <- as.factor(dt1$New_group)
+
+for (i in 1:nrow(dt2)){
+  if(dt2$Pclass[i] == 1){
+    dt2$Pclass[i] = 'FirstClass'
+  } else if(dt2$Pclass[i] == 2){
+    dt2$Pclass[i] = 'SecondClass'
+  }else{
+    dt2$Pclass[i] = 'ThirdClass' 
+    
+  }
+}
+
+
+11. dt2$Name <- as.factor(dt2$Name)
+12. dt2$Sex <- as.factor(dt2$Sex)            
+13.dt2$Pclass <- as.factor(dt2$Pclass)  
+14.dt2$New_group <- as.factor(dt2$New_group)
+15.library(caret)
+16.plus <- trainControl(method = "cv"
+                           number = 10,
+                           repeats = 3,
+                           classProbs = TRUE,
+                           summaryFunction = twoClassSummary)
+
+17.rf <- train(Survived ~ ., 
+              data = dt1, method = 'rf',
+              trControl = plus,
+              metric = "Accuracy", 
+              tuneGrid = data.frame(.mtry = 2),  
+              importance =TRUE)
+18. rf
+19.confusionMatrix(rf)
+20.var_importance <- varImp(rf, scale=FALSE)
+21.plot(var_importance, top=5)
+ 
+
+
+
+
+
